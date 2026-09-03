@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>What's Your Harvest Tab?</title>
+<style>
+  :root{
+  --paper:#EDEEE7;
+  --paper-alt:#E3E5DA;
+  --ink:#1E2A22;
+  --ink-soft:#5B675E;
+  --line:#C6CBBD;
+  --accent:#2F6F4E;
+  --flag:#B8452F;
+  --serif:"Iowan Old Style","Palatino Linotype","Book Antiqua",Georgia,serif;
+  --mono:"IBM Plex Mono","SF Mono",Menlo,Consolas,monospace;
+}
+
+*{
+  box-sizing:border-box;
+}
+
+html,
+body{
+  margin:0;
+  width:100%;
+  min-height:100%;
+}
+
+body{
+  min-height:100vh;
+  background:var(--paper-alt);
+  background-image:
+    radial-gradient(
+      circle at 1px 1px,
+      rgba(30,42,34,0.06) 1px,
+      transparent 0
+    );
+  background-size:14px 14px;
+  font-family:var(--serif);
+  color:var(--ink);
+}
+
+/* =========================================================
+   MAIN TWO-PANE LAYOUT
+   ========================================================= */
+
+.receipt{
+  width:100%;
+  min-height:100vh;
+  display:grid;
+  grid-template-columns:minmax(260px, 30vw) minmax(0, 1fr);
+  background:var(--paper);
+  border:none;
+  position:relative;
+  padding:0;
+}
+
+/* =========================================================
+   LEFT LEDGER SPINE
+   ========================================================= */
+
+.ledger-pane{
+  min-height:100vh;
+  background:var(--ink);
+  color:var(--paper);
+  padding:42px clamp(24px, 4vw, 56px);
+  position:relative;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+
+/* subtle ledger texture */
+.ledger-pane::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  opacity:.08;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent 0,
+      transparent 31px,
+      rgba(255,255,255,.35) 32px
+    );
+}
+
+.ledger-header{
+  position:relative;
+  z-index:1;
+  margin-bottom:32px;
+}
+
+.ledger-kicker{
+  font-family:var(--mono);
+  font-size:10px;
+  letter-spacing:.1em;
+  color:rgba(237,238,231,.62);
+  margin:0 0 10px;
+}
+
+.ledger-title{
+  font-size:22px;
+  line-height:1.2;
+  font-weight:600;
+  margin:0;
+  color:var(--paper);
+}
+
+.ledger-summary{
+  font-size:13px;
+  line-height:1.5;
+  color:rgba(237,238,231,.62);
+  margin:8px 0 0;
+}
+
+/* Running tally */
+.ledger{
+  position:relative;
+  z-index:1;
+  margin:0;
+}
+
+.ledger-line{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:16px;
+  padding:10px 0;
+  font-size:14px;
+  border-bottom:1px dotted rgba(237,238,231,.25);
+  opacity:0;
+  animation:appear .35s ease forwards;
+}
+
+/* LEFT DARK LEDGER */
+.ledger-pane .ledger-line .label{
+  color:rgba(237,238,231,.68);
+}
+
+.ledger-pane .ledger-line .value{
+  font-family:var(--mono);
+  font-weight:600;
+  text-align:right;
+  color:var(--paper);
+}
+
+/* RIGHT LIGHT RESULTS */
+.bill-lines .ledger-line .label{
+  color:var(--ink);
+}
+
+.bill-lines .ledger-line .value{
+  font-family:var(--mono);
+  font-weight:600;
+  text-align:right;
+  color:var(--ink);
+}
+
+/* =========================================================
+   RIGHT WORKSPACE
+   ========================================================= */
+
+.workspace{
+  min-width:0;
+  min-height:100vh;
+  background:var(--paper);
+  overflow-y:auto;
+}
+
+.workspace-inner{
+  width:100%;
+  max-width:900px;
+  min-height:100vh;
+  padding:56px clamp(28px, 5vw, 80px) 60px;
+}
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+header.top{
+  text-align:left;
+  border-bottom:1px dashed var(--line);
+  padding-bottom:22px;
+  margin-bottom:30px;
+}
+
+.kicker{
+  font-family:var(--mono);
+  font-size:11px;
+  letter-spacing:.08em;
+  color:var(--ink-soft);
+  margin:0 0 10px;
+}
+
+h1{
+  font-size:clamp(28px, 3vw, 40px);
+  line-height:1.15;
+  margin:0 0 12px;
+  font-weight:600;
+  max-width:18ch;
+}
+
+.sub{
+  font-size:15px;
+  color:var(--ink-soft);
+  margin:0;
+  max-width:62ch;
+  line-height:1.6;
+}
+
+/* =========================================================
+   QUESTION AREA
+   ========================================================= */
+
+.step{
+  margin-top:28px;
+  max-width:700px;
+}
+
+.q{
+  font-size:20px;
+  margin:0 0 16px;
+  line-height:1.4;
+}
+
+.hint{
+  font-size:12.5px;
+  color:var(--ink-soft);
+  margin:-8px 0 14px;
+  line-height:1.5;
+}
+
+.options{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:6px;
+}
+
+.opt{
+  font-family:var(--mono);
+  font-size:13px;
+  padding:11px 18px;
+  border:1px solid var(--ink);
+  background:transparent;
+  color:var(--ink);
+  cursor:pointer;
+  transition:background .15s ease, color .15s ease;
+}
+
+.opt:hover{
+  background:var(--ink);
+  color:var(--paper);
+}
+
+input[type=number],
+input[type=email],
+input[type=text]{
+  width:100%;
+  font-family:var(--mono);
+  font-size:16px;
+  padding:13px 14px;
+  border:1px solid var(--ink);
+  background:#fff;
+  color:var(--ink);
+  outline:none;
+}
+
+input:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 2px rgba(47,111,78,.18);
+}
+
+.row-actions{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-top:18px;
+}
+
+.btn{
+  font-family:var(--mono);
+  font-size:13px;
+  letter-spacing:.02em;
+  padding:11px 20px;
+  background:var(--ink);
+  color:var(--paper);
+  border:none;
+  cursor:pointer;
+}
+
+.btn:disabled{
+  opacity:.35;
+  cursor:not-allowed;
+}
+
+.btn.ghost{
+  background:transparent;
+  color:var(--ink-soft);
+  padding:11px 4px;
+  text-decoration:underline;
+  text-underline-offset:3px;
+}
+
+.err{
+  color:var(--flag);
+  font-size:12.5px;
+  margin-top:8px;
+  min-height:14px;
+}
+
+/* =========================================================
+   RESULTS
+   ========================================================= */
+
+.cut{
+  border-top:1px dashed var(--line);
+  margin:30px 0 24px;
+  position:relative;
+}
+
+.cut span{
+  position:absolute;
+  left:50%;
+  top:-9px;
+  transform:translateX(-50%);
+  background:var(--paper);
+  padding:0 8px;
+  font-family:var(--mono);
+  font-size:10px;
+  color:var(--ink-soft);
+  letter-spacing:.08em;
+  white-space:nowrap;
+}
+
+.total-line{
+  display:flex;
+  justify-content:space-between;
+  gap:20px;
+  padding:13px 0 5px;
+  font-size:18px;
+  font-weight:600;
+  border-top:2px solid var(--ink);
+  margin-top:6px;
+}
+
+.total-line .value{
+  font-family:var(--mono);
+  white-space:nowrap;
+}
+
+.section-title{
+  font-family:var(--mono);
+  font-size:11px;
+  letter-spacing:.08em;
+  color:var(--ink-soft);
+  margin:0 0 10px;
+}
+
+table.compare{
+  width:100%;
+  border-collapse:collapse;
+  font-size:14px;
+  margin-bottom:4px;
+}
+
+table.compare th{
+  text-align:left;
+  font-family:var(--mono);
+  font-size:11px;
+  letter-spacing:.04em;
+  color:var(--ink-soft);
+  font-weight:500;
+  border-bottom:1px solid var(--ink);
+  padding:6px 0;
+}
+
+table.compare td{
+  padding:9px 0;
+  border-bottom:1px dotted var(--line);
+}
+
+table.compare td.num,
+table.compare th.num{
+  text-align:right;
+  font-family:var(--mono);
+}
+
+tr.highlight td{
+  background:rgba(47,111,78,.08);
+  font-weight:600;
+}
+
+.note{
+  font-size:12.5px;
+  color:var(--ink-soft);
+  line-height:1.6;
+  margin-top:18px;
+}
+
+.confirm{
+  background:rgba(47,111,78,.1);
+  border:1px solid var(--accent);
+  padding:14px 16px;
+  font-size:13.5px;
+  margin-top:18px;
+  color:var(--ink);
+}
+
+.confirm.pending{
+  background:rgba(91,103,94,.08);
+  border-color:var(--line);
+  color:var(--ink-soft);
+}
+
+.confirm.error{
+  background:rgba(184,69,47,.08);
+  border-color:var(--flag);
+}
+
+.restart{
+  margin-top:26px;
+  text-align:center;
+}
+
+/* =========================================================
+   ANIMATION
+   ========================================================= */
+
+@keyframes appear{
+  from{
+    opacity:0;
+    transform:translateY(4px);
+  }
+
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+}
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width:900px){
+
+  .receipt{
+    grid-template-columns:240px minmax(0,1fr);
+  }
+
+  .ledger-pane{
+    padding:32px 24px;
+  }
+
+  .workspace-inner{
+    padding:40px 32px 50px;
+  }
+
+  h1{
+    font-size:32px;
+  }
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width:640px){
+
+  body{
+    min-height:100vh;
+  }
+
+  .receipt{
+    display:flex;
+    flex-direction:column;
+    min-height:100vh;
+  }
+
+  .ledger-pane{
+    min-height:auto;
+    padding:24px 20px 20px;
+    flex:none;
+  }
+
+  .ledger-header{
+    margin-bottom:18px;
+  }
+
+  .ledger-title{
+    font-size:19px;
+  }
+
+  .ledger-summary{
+    display:none;
+  }
+
+  .ledger{
+    max-height:190px;
+    overflow-y:auto;
+  }
+
+  .ledger-line{
+    padding:8px 0;
+    font-size:13px;
+  }
+
+  .workspace{
+    min-height:0;
+    flex:1;
+    overflow:visible;
+  }
+
+  .workspace-inner{
+    min-height:0;
+    padding:30px 20px 40px;
+  }
+
+  header.top{
+    margin-bottom:26px;
+    padding-bottom:20px;
+  }
+
+  .kicker{
+    font-size:9px;
+    line-height:1.4;
+  }
+
+  h1{
+    font-size:25px;
+    max-width:none;
+  }
+
+  .sub{
+    font-size:14px;
+  }
+
+  .step{
+    margin-top:24px;
+  }
+
+  .q{
+    font-size:18px;
+  }
+
+  .options{
+    gap:8px;
+  }
+
+  .opt{
+    flex:1 1 auto;
+    text-align:center;
+  }
+
+  .row-actions{
+    margin-top:16px;
+  }
+
+  .btn{
+    min-height:44px;
+  }
+
+  .total-line{
+    font-size:16px;
+  }
+
+  table.compare{
+    font-size:13px;
+  }
+
+  table.compare th{
+    font-size:10px;
+  }
+}
+
+/* Very small phones */
+@media (max-width:380px){
+
+  .workspace-inner{
+    padding-left:16px;
+    padding-right:16px;
+  }
+
+  .ledger-pane{
+    padding-left:16px;
+    padding-right:16px;
+  }
+
+  h1{
+    font-size:23px;
+  }
+
+  .sub{
+    font-size:13.5px;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="receipt" id="receipt">
+
+  <!-- LEFT: RUNNING LEDGER -->
+  <aside class="ledger-pane">
+
+    <div class="ledger-header">
+      <p class="ledger-kicker">RUNNING TALLY</p>
+      <h2 class="ledger-title">Your estimate</h2>
+      <p class="ledger-summary">
+        Your answers will appear here as you work through the estimate.
+      </p>
+    </div>
+
+    <div class="ledger" id="ledger"></div>
+
+  </aside>
+
+
+  <!-- RIGHT: CURRENT QUESTION / RESULTS -->
+  <main class="workspace">
+
+    <div class="workspace-inner">
+
+      <header class="top">
+        <p class="kicker">
+          MONTHLY BILL ESTIMATOR — HARVEST FLEX PRICING
+        </p>
+
+        <h1>
+          What's your Harvest tab this month?
+        </h1>
+
+        <p class="sub">
+          Answer a few questions about your account. We'll tally your
+          estimated bill under Harvest's usage-based Flex pricing, show
+          what the same headcount would cost on three alternatives, and
+          email you a PDF copy.
+        </p>
+      </header>
+
+      <div class="step" id="stepArea"></div>
+
+    </div>
+
+  </main>
+
+</div>
+
+<script>
+(function(){
+
+  const SEAT_RATE = {
+    teams:      { annual: 9,  monthly: 11 },
+    enterprise: { annual: 14, monthly: 17.5 }
+  };
+  const FORECAST_ADDON = 5;
+
+  function bandedFee(value, freeAllowance, table){
+    if (value <= freeAllowance) return 0;
+    for (const [upper, fee] of table){ if (value <= upper) return fee; }
+    return table[table.length-1][1];
+  }
+  const COUNT_TABLE = [[10,15],[25,50],[50,150],[100,400],[150,700],[Infinity,1000]];
+  const INVOICE_TABLE = [[10,15],[20,75],[50,300],[Infinity,650]];
+  const AMOUNT_TABLE  = [[20000,15],[75000,150],[200000,350],[Infinity,650]];
+
+  const COMPETITORS = [
+    { name: "OneSuite",     rate: 9    },
+    { name: "Productive",   rate: 29   },
+    { name: "Teamwork.com", rate: 29.99}
+  ];
+
+  const fmt = n => "$" + Number(n).toLocaleString("en-US", {minimumFractionDigits:2, maximumFractionDigits:2});
+  const fmtInt = n => Number(n).toLocaleString("en-US");
+
+  const state = {};
+  let stepIndex = 0;
+
+  const steps = [
+    { key:"plan", label:"Plan",
+      render(container, onNext){
+        container.innerHTML = `
+          <p class="q">Which Harvest plan are you on, or considering?</p>
+          <div class="options">
+            <button class="opt" data-v="teams">Teams</button>
+            <button class="opt" data-v="enterprise">Enterprise</button>
+          </div>
+          <div class="err"></div>`;
+        bindOptions(container, onNext);
+      },
+      display: v => v === "teams" ? "Teams" : "Enterprise"
+    },
+    { key:"billing", label:"Billing",
+      render(container, onNext){
+        container.innerHTML = `
+          <p class="q">How do you pay for it?</p>
+          <div class="options">
+            <button class="opt" data-v="annual">Annual</button>
+            <button class="opt" data-v="monthly">Monthly</button>
+          </div>
+          <div class="err"></div>`;
+        bindOptions(container, onNext);
+      },
+      display: v => v === "annual" ? "Annual billing" : "Monthly billing"
+    },
+    { key:"seats", label:"Seats",
+      render(container, onNext){
+        renderNumber(container, { q:"How many people need a seat this month?",
+          hint:"Everyone with login access, including anyone archived but not yet removed from billing.",
+          min:1, placeholder:"e.g. 8" }, onNext);
+      },
+      display: v => `${fmtInt(v)} seat${v==1?"":"s"}`
+    },
+    { key:"projects", label:"Projects",
+      render(container, onNext){ renderNumber(container, { q:"How many active projects this month?", min:0, placeholder:"e.g. 6" }, onNext); },
+      display: v => `${fmtInt(v)}`
+    },
+    { key:"tasks", label:"Tasks",
+      render(container, onNext){ renderNumber(container, { q:"How many tasks are in use this month?", min:0, placeholder:"e.g. 12" }, onNext); },
+      display: v => `${fmtInt(v)}`
+    },
+    { key:"clients", label:"Clients",
+      render(container, onNext){ renderNumber(container, { q:"How many clients are you billing for?", min:0, placeholder:"e.g. 5" }, onNext); },
+      display: v => `${fmtInt(v)}`
+    },
+    { key:"invoices", label:"Invoices",
+      render(container, onNext){ renderNumber(container, { q:"How many invoices did you create this month?", min:0, placeholder:"e.g. 4" }, onNext); },
+      display: v => `${fmtInt(v)}`
+    },
+    { key:"amountInvoiced", label:"Amount invoiced",
+      render(container, onNext){ renderNumber(container, { q:"Total dollar amount invoiced this month?", min:0, placeholder:"e.g. 15000", step:"any" }, onNext); },
+      display: v => fmt(Number(v))
+    },
+    { key:"forecast", label:"Forecast add-on",
+      render(container, onNext){
+        container.innerHTML = `
+          <p class="q">Using Forecast for team scheduling?</p>
+          <p class="hint">A separate add-on, $${FORECAST_ADDON}/seat/month.</p>
+          <div class="options">
+            <button class="opt" data-v="yes">Yes</button>
+            <button class="opt" data-v="no">No</button>
+          </div>
+          <div class="err"></div>`;
+        bindOptions(container, onNext);
+      },
+      display: v => v === "yes" ? "Yes" : "No"
+    },
+    { key:"email", label:"Email",
+      render(container, onNext){
+        container.innerHTML = `
+          <p class="q">Last thing — where should we send your PDF estimate?</p>
+          <input type="email" id="inp" placeholder="you@company.com" autocomplete="email">
+          <div class="err" id="errBox"></div>
+          <div class="row-actions">
+            <span></span>
+            <button class="btn" id="goBtn">Get my estimate</button>
+          </div>`;
+        const inp = container.querySelector("#inp");
+        const err = container.querySelector("#errBox");
+        const go = container.querySelector("#goBtn");
+        inp.focus();
+        function submit(){
+          const val = inp.value.trim();
+          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)){ err.textContent = "Enter a valid email address."; return; }
+          onNext(val);
+        }
+        go.addEventListener("click", submit);
+        inp.addEventListener("keydown", e => { if (e.key === "Enter") submit(); });
+      },
+      display: v => v
+    }
+  ];
+
+  function bindOptions(container, onNext){
+    container.querySelectorAll(".opt").forEach(b => b.addEventListener("click", () => onNext(b.dataset.v)));
+  }
+
+  function renderNumber(container, opts, onNext){
+    container.innerHTML = `
+      <p class="q">${opts.q}</p>
+      ${opts.hint ? `<p class="hint">${opts.hint}</p>` : ""}
+      <input type="number" id="inp" min="${opts.min}" ${opts.step ? `step="${opts.step}"`:""} placeholder="${opts.placeholder||""}">
+      <div class="err" id="errBox"></div>
+      <div class="row-actions"><span></span><button class="btn" id="goBtn">Continue</button></div>`;
+    const inp = container.querySelector("#inp");
+    const err = container.querySelector("#errBox");
+    const go = container.querySelector("#goBtn");
+    inp.focus();
+    function submit(){
+      const raw = inp.value.trim();
+      if (raw === "" || isNaN(Number(raw)) || Number(raw) < opts.min){ err.textContent = `Enter a number of ${opts.min} or more.`; return; }
+      onNext(Number(raw));
+    }
+    go.addEventListener("click", submit);
+    inp.addEventListener("keydown", e => { if (e.key === "Enter") submit(); });
+  }
+
+  const ledgerEl = document.getElementById("ledger");
+  const stepArea = document.getElementById("stepArea");
+
+  function addLedgerLine(label, value){
+    const line = document.createElement("div");
+    line.className = "ledger-line";
+    line.innerHTML = `<span class="label">${label}</span><span class="value">${value}</span>`;
+    ledgerEl.appendChild(line);
+  }
+
+  function showStep(i){
+    if (i >= steps.length){ showResults(); return; }
+    const step = steps[i];
+    step.render(stepArea, (value) => {
+      state[step.key] = value;
+      addLedgerLine(step.label, step.display(value));
+      stepIndex = i + 1;
+      showStep(stepIndex);
+    });
+  }
+
+  function computeHarvest(){
+    const seatRate = SEAT_RATE[state.plan][state.billing];
+    const seatCost = seatRate * state.seats;
+    const projectFee = bandedFee(state.projects, 4, COUNT_TABLE);
+    const taskFee    = bandedFee(state.tasks, 3, COUNT_TABLE);
+    const clientFee  = bandedFee(state.clients, 3, COUNT_TABLE);
+    const invoiceFee = bandedFee(state.invoices, 4, INVOICE_TABLE);
+    const amountFee  = bandedFee(state.amountInvoiced, 3000, AMOUNT_TABLE);
+    const forecastCost = state.forecast === "yes" ? FORECAST_ADDON * state.seats : 0;
+    const total = seatCost + projectFee + taskFee + clientFee + invoiceFee + amountFee + forecastCost;
+    return { seatRate, seatCost, projectFee, taskFee, clientFee, invoiceFee, amountFee, forecastCost, total };
+  }
+
+  function showResults(){
+    const bill = computeHarvest();
+    const planLabel = state.plan === "teams" ? "Teams" : "Enterprise";
+    const billingLabel = state.billing === "annual" ? "annual" : "monthly";
+
+    stepArea.innerHTML = `
+      <div class="cut"><span>YOUR ESTIMATE</span></div>
+      <p class="section-title">HARVEST — ${planLabel.toUpperCase()}, ${billingLabel.toUpperCase()}</p>
+      <div id="billLines"></div>
+      <div class="total-line"><span>Estimated total this month</span><span class="value">${fmt(bill.total)}</span></div>
+      <p class="note">Seat fees ($${bill.seatRate}/seat) are Harvest's published rate. Usage fees follow Harvest's Flex tiers; Harvest publishes only a few anchor points on that schedule, so the bands between them are our estimate, not an official rate card.</p>
+
+      <div class="cut"><span>SAME TEAM, THREE ALTERNATIVES</span></div>
+      <p class="section-title">BASED ON ${fmtInt(state.seats)} USER${state.seats==1?"":"S"} — PER-USER RATE ONLY</p>
+      <table class="compare">
+        <thead><tr><th>Tool</th><th class="num">Rate / user</th><th class="num">Monthly bill</th></tr></thead>
+        <tbody id="compareBody"></tbody>
+      </table>
+
+      <div id="confirmArea"></div>
+      <div class="restart"><button class="btn ghost" id="restartBtn">Start a new estimate</button></div>
+    `;
+
+    const billLines = document.getElementById("billLines");
+    const lines = [
+      ["Seats", bill.seatCost, `${fmtInt(state.seats)} × $${bill.seatRate}`],
+      ["Projects", bill.projectFee, `${fmtInt(state.projects)} used`],
+      ["Tasks", bill.taskFee, `${fmtInt(state.tasks)} used`],
+      ["Clients", bill.clientFee, `${fmtInt(state.clients)} used`],
+      ["Invoices created", bill.invoiceFee, `${fmtInt(state.invoices)} created`],
+      ["Amount invoiced", bill.amountFee, `${fmt(state.amountInvoiced)} invoiced`],
+    ];
+    if (state.forecast === "yes") lines.push(["Forecast add-on", bill.forecastCost, `${fmtInt(state.seats)} × $${FORECAST_ADDON}`]);
+    lines.forEach(([label, amt, sub], idx) => {
+      const el = document.createElement("div");
+      el.className = "ledger-line";
+      el.style.animationDelay = (idx * 0.05) + "s";
+      el.innerHTML = `<span class="label">${label} <span style="opacity:.6">(${sub})</span></span><span class="value">${fmt(amt)}</span>`;
+      billLines.appendChild(el);
+    });
+
+    const compareBody = document.getElementById("compareBody");
+    const compRows = COMPETITORS.map(c => ({ ...c, total: c.rate * state.seats }));
+    const allTotals = [{name:"Harvest", total: bill.total}, ...compRows];
+    const overallCheapest = allTotals.reduce((a,b) => b.total < a.total ? b : a);
+    compRows.forEach(c => {
+      const tr = document.createElement("tr");
+      if (c.name === overallCheapest.name) tr.className = "highlight";
+      tr.innerHTML = `<td>${c.name}</td><td class="num">$${c.rate.toFixed(2)}</td><td class="num">${fmt(c.total)}</td>`;
+      compareBody.appendChild(tr);
+    });
+    const harvestRow = document.createElement("tr");
+    if (overallCheapest.name === "Harvest") harvestRow.className = "highlight";
+    harvestRow.innerHTML = `<td>Harvest (est.)</td><td class="num">—</td><td class="num">${fmt(bill.total)}</td>`;
+    compareBody.appendChild(harvestRow);
+
+    // const confirmArea = document.getElementById("confirmArea");
+    // confirmArea.innerHTML = `<div class="confirm pending" id="confirmBox">Sending your PDF to <strong>${state.email}</strong>…</div>`;
+    // const confirmBox = document.getElementById("confirmBox");
+
+    // fetch("/api/submit", {
+    //   method: "POST",
+    //   headers: { "Content-Type": "application/json" },
+    //   body: JSON.stringify(state)
+    // })
+    //   .then(async (r) => {
+    //     const json = await r.json();
+    //     if (!r.ok) throw new Error(json.error || "Request failed");
+    //     if (json.emailSent) {
+    //       confirmBox.className = "confirm";
+    //       confirmBox.innerHTML = `Sent — check <strong>${state.email}</strong> for your PDF estimate.`;
+    //     } else {
+    //       confirmBox.className = "confirm error";
+    //       confirmBox.innerHTML = `Saved your estimate, but the email didn't go out (${json.emailError || "unknown error"}). Try again in a moment.`;
+    //     }
+    //   })
+    //   .catch((e) => {
+    //     confirmBox.className = "confirm error";
+    //     confirmBox.innerHTML = `Couldn't reach the server to email your estimate (${e.message}). Your numbers above are still accurate — try again shortly.`;
+    //   });
+
+    document.getElementById("restartBtn").addEventListener("click", () => {
+      Object.keys(state).forEach(k => delete state[k]);
+      ledgerEl.innerHTML = "";
+      stepIndex = 0;
+      showStep(0);
+    });
+  }
+
+  showStep(0);
+})();
+</script>
+</body>
+</html>
