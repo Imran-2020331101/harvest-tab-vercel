@@ -84,7 +84,6 @@
     line-height:1.12;
     letter-spacing:-.035em;
     font-weight:650;
-    padding-bottom:1em;
   }
 
   .sub{
@@ -142,60 +141,6 @@
     flex-wrap:wrap;
     gap:10px;
   }
-
-  .usage-form{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:18px 16px;
-  max-width:760px;
-  }
-
-  .field{
-    display:flex;
-    flex-direction:column;
-    gap:7px;
-  }
-
-  .field-wide{
-    grid-column:1 / -1;
-  }
-
-  .field label,
-  .forecast-field label{
-    font-size:13px;
-    font-weight:600;
-    color:var(--ink);
-  }
-
-  .field input{
-    max-width:none;
-  }
-
-  .field-hint{
-    margin:5px 0 0;
-    color:var(--muted);
-    font-size:12px;
-    line-height:1.45;
-  }
-
-  .forecast-field{
-    grid-column:1 / -1;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    gap:20px;
-    padding-top:4px;
-  }
-
-  .forecast-field .options{
-    flex:none;
-  }
-
-.forecast-field .opt.forecast-selected{
-  border-color:var(--accent);
-  background:var(--accent-soft);
-  color:var(--accent);
-}
 
   .opt{
     min-height:42px;
@@ -706,20 +651,6 @@
     .total-value{font-size:25px}
 
     .price-item{gap:10px}
-    
-    .usage-form{
-      grid-template-columns:1fr;
-      gap:15px;
-    }
-
-    .field-wide{
-      grid-column:auto;
-    }
-
-    .forecast-field{
-      flex-direction:column;
-      align-items:flex-start;
-    }
   }
 
   @media (max-width:420px){
@@ -733,17 +664,6 @@
     .total{align-items:center}
     .total-label{font-size:20px}
     .total-value{font-size:22px}
-    .usage-form{
-      gap:13px;
-    }
-
-    .forecast-field .options{
-      width:100%;
-    }
-
-    .forecast-field .opt{
-      flex:1;
-    }
   }
 </style>
 </head>
@@ -755,9 +675,11 @@
     <header class="top">
       <p class="kicker">MONTHLY BILL ESTIMATOR · HARVEST FLEX PRICING</p>
       <h1>What's your Harvest tab this month?</h1>
-      <!-- <p class="sub">
-        Answer a few questions about your account.
-      </p> -->
+      <p class="sub">
+        Answer a few questions about your account. We'll tally your estimated bill
+        under Harvest's usage-based Flex pricing, compare the same team with three
+        alternatives, and email you a PDF copy.
+      </p>
     </header>
 
     <section class="wizard-card" id="wizardCard">
@@ -878,287 +800,82 @@
       display:v => `${fmtInt(v)} seat${v==1?"":"s"}`
     },
     {
-      key:"usage",
-      label:"Usage & activity",
-
+      key:"projects",
+      label:"Projects",
       render(container,onNext){
-
-        container.innerHTML = `
-          <p class="q">Tell us about your account activity this month</p>
-          <p class="hint">
-            Enter your current usage below to estimate your Harvest Flex pricing.
-          </p>
-
-          <div class="usage-form">
-
-            <div class="field">
-              <label for="projects">
-                Active projects this month
-              </label>
-              <input
-                type="number"
-                id="projects"
-                min="0"
-                placeholder="e.g. 6"
-              >
-            </div>
-
-            <div class="field">
-              <label for="tasks">
-                Tasks in use this month
-              </label>
-              <input
-                type="number"
-                id="tasks"
-                min="0"
-                placeholder="e.g. 12"
-              >
-            </div>
-
-            <div class="field">
-              <label for="clients">
-                Clients you're billing for
-              </label>
-              <input
-                type="number"
-                id="clients"
-                min="0"
-                placeholder="e.g. 5"
-              >
-            </div>
-
-            <div class="field">
-              <label for="invoices">
-                Invoices created this month
-              </label>
-              <input
-                type="number"
-                id="invoices"
-                min="0"
-                placeholder="e.g. 4"
-              >
-            </div>
-
-            <div class="field field-wide">
-              <label for="amountInvoiced">
-                Total dollar amount invoiced this month
-              </label>
-              <input
-                type="number"
-                id="amountInvoiced"
-                min="0"
-                step="any"
-                placeholder="e.g. 15000"
-              >
-            </div>
-
-            <div class="forecast-field">
-              <div>
-                <label>Using Forecast for team scheduling?</label>
-                <p class="field-hint">
-                  A separate add-on, $${FORECAST_ADDON}/seat/month.
-                </p>
-              </div>
-
-              <div class="options">
-                <button type="button" class="opt" data-forecast="yes">
-                  Yes
-                </button>
-
-                <button type="button" class="opt" data-forecast="no">
-                  No
-                </button>
-              </div>
-            </div>
-
-          </div>
-
-          <div class="err" id="usageErr"></div>
-
-          <div class="row-actions">
-            <button class="btn" id="usageBtn">
-              Continue
-            </button>
-          </div>
-        `;
-
-        const usageErr = container.querySelector("#usageErr");
-        const usageBtn = container.querySelector("#usageBtn");
-
-        let forecastValue = null;
-
-        // Forecast selection
-        container.querySelectorAll("[data-forecast]").forEach(button => {
-
-          button.addEventListener("click", () => {
-
-            forecastValue = button.dataset.forecast;
-
-            // container
-            //   .querySelectorAll("[data-forecast]")
-            //   .forEach(btn => btn.classList.remove("selected"));
-
-            // button.classList.add("selected");
-            container
-                .querySelectorAll("[data-forecast]")
-                .forEach(btn => btn.classList.remove("forecast-selected"));
-
-              button.classList.add("forecast-selected");
-          });
-
-        });
-
-        function submit(){
-
-          const projects =
-            Number(container.querySelector("#projects").value);
-
-          const tasks =
-            Number(container.querySelector("#tasks").value);
-
-          const clients =
-            Number(container.querySelector("#clients").value);
-
-          const invoices =
-            Number(container.querySelector("#invoices").value);
-
-          const amountInvoiced =
-            Number(container.querySelector("#amountInvoiced").value);
-
-          const values = [
-            { name:"projects", value:projects },
-            { name:"tasks", value:tasks },
-            { name:"clients", value:clients },
-            { name:"invoices", value:invoices },
-            { name:"amount invoiced", value:amountInvoiced }
-          ];
-
-          const invalid = values.some(item =>
-            isNaN(item.value) || item.value < 0
-          );
-
-          if(invalid){
-
-            usageErr.textContent =
-              "Please enter valid numbers for all usage fields.";
-
-            return;
-          }
-
-          if(forecastValue === null){
-
-            usageErr.textContent =
-              "Please select whether you use Forecast.";
-
-            return;
-          }
-
-          usageErr.textContent = "";
-
-          onNext({
-            projects,
-            tasks,
-            clients,
-            invoices,
-            amountInvoiced,
-            forecast:forecastValue
-          });
-        }
-
-        usageBtn.addEventListener("click",submit);
-
-        // Allow Enter to submit
-        container.querySelectorAll("input").forEach(input => {
-          input.addEventListener("keydown",e => {
-            if(e.key === "Enter"){
-              submit();
-            }
-          });
-        });
-
-        container.querySelector("#projects").focus();
+        renderNumber(container,{
+          q:"How many active projects this month?",
+          min:0,
+          placeholder:"e.g. 6"
+        },onNext);
       },
-
-      display:v => "Usage & activity"
+      display:v => `${fmtInt(v)}`
     },
-    // {
-    //   key:"projects",
-    //   label:"Projects",
-    //   render(container,onNext){
-    //     renderNumber(container,{
-    //       q:"How many active projects this month?",
-    //       min:0,
-    //       placeholder:"e.g. 6"
-    //     },onNext);
-    //   },
-    //   display:v => `${fmtInt(v)}`
-    // },
-    // {
-    //   key:"tasks",
-    //   label:"Tasks",
-    //   render(container,onNext){
-    //     renderNumber(container,{
-    //       q:"How many tasks are in use this month?",
-    //       min:0,
-    //       placeholder:"e.g. 12"
-    //     },onNext);
-    //   },
-    //   display:v => `${fmtInt(v)}`
-    // },
-    // {
-    //   key:"clients",
-    //   label:"Clients",
-    //   render(container,onNext){
-    //     renderNumber(container,{
-    //       q:"How many clients are you billing for?",
-    //       min:0,
-    //       placeholder:"e.g. 5"
-    //     },onNext);
-    //   },
-    //   display:v => `${fmtInt(v)}`
-    // },
-    // {
-    //   key:"invoices",
-    //   label:"Invoices",
-    //   render(container,onNext){
-    //     renderNumber(container,{
-    //       q:"How many invoices did you create this month?",
-    //       min:0,
-    //       placeholder:"e.g. 4"
-    //     },onNext);
-    //   },
-    //   display:v => `${fmtInt(v)}`
-    // },
-    // {
-    //   key:"amountInvoiced",
-    //   label:"Amount invoiced",
-    //   render(container,onNext){
-    //     renderNumber(container,{
-    //       q:"Total dollar amount invoiced this month?",
-    //       min:0,
-    //       placeholder:"e.g. 15000",
-    //       step:"any"
-    //     },onNext);
-    //   },
-    //   display:v => fmt(Number(v))
-    // },
-    // {
-    //   key:"forecast",
-    //   label:"Forecast add-on",
-    //   render(container,onNext){
-    //     container.innerHTML = `
-    //       <p class="q">Using Forecast for team scheduling?</p>
-    //       <p class="hint">A separate add-on, $${FORECAST_ADDON}/seat/month.</p>
-    //       <div class="options">
-    //         <button class="opt" data-v="yes">Yes</button>
-    //         <button class="opt" data-v="no">No</button>
-    //       </div>
-    //       <div class="err"></div>`;
-    //     bindOptions(container,onNext);
-    //   },
-    //   display:v => v === "yes" ? "Yes" : "No"
-    // },
-    
+    {
+      key:"tasks",
+      label:"Tasks",
+      render(container,onNext){
+        renderNumber(container,{
+          q:"How many tasks are in use this month?",
+          min:0,
+          placeholder:"e.g. 12"
+        },onNext);
+      },
+      display:v => `${fmtInt(v)}`
+    },
+    {
+      key:"clients",
+      label:"Clients",
+      render(container,onNext){
+        renderNumber(container,{
+          q:"How many clients are you billing for?",
+          min:0,
+          placeholder:"e.g. 5"
+        },onNext);
+      },
+      display:v => `${fmtInt(v)}`
+    },
+    {
+      key:"invoices",
+      label:"Invoices",
+      render(container,onNext){
+        renderNumber(container,{
+          q:"How many invoices did you create this month?",
+          min:0,
+          placeholder:"e.g. 4"
+        },onNext);
+      },
+      display:v => `${fmtInt(v)}`
+    },
+    {
+      key:"amountInvoiced",
+      label:"Amount invoiced",
+      render(container,onNext){
+        renderNumber(container,{
+          q:"Total dollar amount invoiced this month?",
+          min:0,
+          placeholder:"e.g. 15000",
+          step:"any"
+        },onNext);
+      },
+      display:v => fmt(Number(v))
+    },
+    {
+      key:"forecast",
+      label:"Forecast add-on",
+      render(container,onNext){
+        container.innerHTML = `
+          <p class="q">Using Forecast for team scheduling?</p>
+          <p class="hint">A separate add-on, $${FORECAST_ADDON}/seat/month.</p>
+          <div class="options">
+            <button class="opt" data-v="yes">Yes</button>
+            <button class="opt" data-v="no">No</button>
+          </div>
+          <div class="err"></div>`;
+        bindOptions(container,onNext);
+      },
+      display:v => v === "yes" ? "Yes" : "No"
+    },
     {
       key:"email",
       label:"Email",
@@ -1241,35 +958,23 @@
       state.amountInvoiced != null ? fmt(state.amountInvoiced) : "—";
   }
 
-function showStep(i){
+  function showStep(i){
+    updateActivity();
 
-  updateActivity();
+    if(i >= steps.length){
+      showResults();
+      return;
+    }
 
-  if(i >= steps.length){
+    const step = steps[i];
 
-    showResults();
-    return;
-
-  }
-
-  const step = steps[i];
-
-  step.render(
-    document.getElementById("stepArea"),
-    value => {
-
-      if(step.key === "usage"){
-        Object.assign(state,value);
-      }else{
-        state[step.key] = value;
-      }
-
+    step.render(document.getElementById("stepArea"),value => {
+      state[step.key] = value;
       stepIndex = i + 1;
       updateActivity();
       showStep(stepIndex);
-    }
-  );
-}
+    });
+  }
 
   function computeHarvest(){
     const seatRate = SEAT_RATE[state.plan][state.billing];
