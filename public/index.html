@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="google-adsense-account" content="ca-pub-1658692912735810">
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1658692912735810"
      crossorigin="anonymous"></script>
 <title>What's Your Harvest Tab?</title>
@@ -1457,9 +1458,9 @@ function showStep(i){
 
       if(json.stored){
         confirmBox.className = "confirm";
-        confirmBox.innerHTML = "Your estimate has been saved successfully.";
+        confirmBox.innerHTML = "Your estimate has been sent successfully.";
       }else{
-        throw new Error("The estimate could not be saved.");
+        throw new Error("The estimate could not be sent.");
       }
     })
     .catch(e => {
